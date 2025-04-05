@@ -35,18 +35,18 @@
             "Rosso (Elevato)": "#FF0000"
         };
         const inputsDiv = document.getElementById("inputs");
-        
+
         bases.forEach(base => {
             let selectOggi = `<select id="${base}-oggi">`;
             let selectDomani = `<select id="${base}-domani">`;
-            
+
             for (const [label, color] of Object.entries(colors)) {
                 selectOggi += `<option value="${color}">${label}</option>`;
                 selectDomani += `<option value="${color}">${label}</option>`;
             }
             selectOggi += "</select>";
             selectDomani += "</select>";
-            
+
             inputsDiv.innerHTML += `
                 <div class="base">
                     <span>${base}</span>
@@ -54,52 +54,56 @@
                     ${selectDomani}
                 </div>`;
         });
-        
+
+        const baseToSvgId = {
+            "A1": "A1",
+            "A2": "A2",
+            "B": "B",
+            "C": "C",
+            "D": "D",
+            "E1": "E1",
+            "E2": "E2",
+        };
+
         function generateMaps() {
             const mapOggi = document.getElementById("map-oggi");
             const mapDomani = document.getElementById("map-domani");
             mapOggi.innerHTML = "<h3>Oggi</h3>";
             mapDomani.innerHTML = "<h3>Domani</h3>";
-            
-            bases.forEach(base => {
-                const colorOggi = document.getElementById(`${base}-oggi`).value;
-                const colorDomani = document.getElementById(`${base}-domani`).value;
-                
-                const areaOggi = createArea(base, colorOggi);
-                const areaDomani = createArea(base, colorDomani);
-                
-                mapOggi.appendChild(areaOggi);
-                mapDomani.appendChild(areaDomani);
-            });
+
+            fetch('Map_of_municipalities_of_Basilicata_-_Italy.svg') // Percorso corretto
+                .then(response => response.text())
+                .then(svg => {
+                    mapOggi.innerHTML += svg;
+                    mapDomani.innerHTML += svg;
+
+                    bases.forEach(base => {
+                        const colorOggi = document.getElementById(`${base}-oggi`).value;
+                        const colorDomani = document.getElementById(`${base}-domani`).value;
+
+                        const svgId = baseToSvgId[base];
+                        const areaOggi = document.getElementById(svgId);
+                        const areaDomani = document.getElementById(svgId);
+
+                        if (areaOggi) areaOggi.style.fill = colorOggi;
+                        if (areaDomani) areaDomani.style.fill = colorDomani;
+                    });
+                });
         }
-        
-        function createArea(base, color) {
-            const area = document.createElement("div");
-            area.style.width = "100px";
-            area.style.height = "100px";
-            area.style.backgroundColor = color;
-            area.style.display = "inline-block";
-            area.style.margin = "5px";
-            area.innerText = base;
-            area.style.textAlign = "center";
-            area.style.lineHeight = "100px";
-            area.style.color = "white";
-            return area;
-        }
-        
+
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text("Bollettino di Criticità", 10, 10);
             let y = 20;
-            
+
             bases.forEach(base => {
                 const oggiText = document.getElementById(`${base}-oggi`).selectedOptions[0].text;
                 const domaniText = document.getElementById(`${base}-domani`).selectedOptions[0].text;
                 doc.text(`${base}: Oggi - ${oggiText}, Domani - ${domaniText}`, 10, y);
                 y += 10;
             });
-            
+
             doc.save("bollettino_criticita.pdf");
         }
     </script>
