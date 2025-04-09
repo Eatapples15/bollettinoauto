@@ -111,18 +111,25 @@
                 });
         }
 
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("Bollettino di Criticità", 10, 10);
-            let y = 20;
+       function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Bollettino di Criticità", 10, 10);
+  let y = 20;
 
-            for (const base in comuniPerBase) {
-                const oggiText = document.getElementById(`${base}-oggi`).selectedOptions[0].text;
-                const domaniText = document.getElementById(`${base}-domani`).selectedOptions[0].text;
-                doc.text(`${base}: Oggi - ${oggiText}, Domani - ${domaniText}`, 10, y);
-                y += 10;
-            }
+  for (const base in comuniPerBase) {
+    const oggiText = document.getElementById(`${base}-oggi`).selectedOptions[0].text;
+    const domaniText = document.getElementById(`${base}-domani`).selectedOptions[0].text;
+    doc.text(`${base}: Oggi - ${oggiText}, Domani - ${domaniText}`, 10, y);
+    y += 10;
+  }
+
+  // Apri il PDF in una nuova finestra utilizzando l'URL dei dati
+  window.open(doc.output('bloburl'), '_blank');
+
+  // Se invece volessi scaricare il PDF, usa:
+  // doc.save('bollettino_criticita.pdf');
+}
 
             html2canvas(document.getElementById('map-oggi')).then(canvasOggi => {
                 const imgDataOggi = canvasOggi.toDataURL('image/png');
