@@ -24,7 +24,7 @@
         .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .map-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* 2 colonne o più a seconda della larghezza */
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
             gap: 20px;
             margin-top: 30px;
         }
@@ -45,11 +45,11 @@
         }
         .map-item iframe {
             width: 100%;
-            height: 500px; /* Altezza fissa per le mappe */
+            height: 500px;
             border: none;
         }
         .loading-spinner {
-            display: none; /* Nascosto di default */
+            display: none;
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-left-color: #007bff;
             border-radius: 50%;
@@ -76,10 +76,10 @@
         <div id="mapContainer" class="map-grid">
             {% if generated_maps %}
                 <h2>Mappe di Criticità Generali</h2>
-                {% for map_file in generated_maps %}
+                {% for map_info in generated_maps %}
                     <div class="map-item">
-                        <h3>{{ map_file.replace("map_oggi_", "Mappa Oggi - ").replace("map_domani_", "Mappa Domani - ").replace(".html", "").replace("_", " ").title() }}</h3>
-                        <iframe src="{{ url_for('serve_map', filename=map_file) }}" allowfullscreen></iframe>
+                        <h3>{{ map_info.title }}</h3>
+                        <iframe src="{{ url_for('serve_map', filename=map_info.filename) }}" allowfullscreen></iframe>
                     </div>
                 {% endfor %}
             {% else %}
@@ -95,10 +95,10 @@
             const spinner = document.getElementById('spinner');
 
             messageDiv.textContent = 'Elaborazione in corso...';
-            messageDiv.className = 'message'; // Resetta classi
+            messageDiv.className = 'message';
             mapContainer.innerHTML = ''; // Pulisci le mappe precedenti
-            spinner.style.display = 'inline-block'; // Mostra spinner
-            this.disabled = true; // Disabilita il pulsante
+            spinner.style.display = 'inline-block';
+            this.disabled = true;
 
             fetch('/process_bulletin', {
                 method: 'POST',
@@ -108,26 +108,29 @@
             })
             .then(response => response.json())
             .then(data => {
-                spinner.style.display = 'none'; // Nascondi spinner
-                this.disabled = false; // Riabilita il pulsante
+                spinner.style.display = 'none';
+                this.disabled = false;
 
                 if (data.status === 'success') {
                     messageDiv.textContent = data.message;
                     messageDiv.className = 'message success';
                     
                     if (data.maps && data.maps.length > 0) {
-                        data.maps.forEach(map_file => {
+                        // Aggiungi un titolo generale per le mappe
+                        const mapsTitle = document.createElement('h2');
+                        mapsTitle.textContent = 'Mappe di Criticità Generate';
+                        mapContainer.appendChild(mapsTitle);
+
+                        data.maps.forEach(map_info => {
                             const mapItem = document.createElement('div');
                             mapItem.className = 'map-item';
                             
                             const mapTitle = document.createElement('h3');
-                            // Formatta il titolo del file per essere più leggibile
-                            let displayTitle = map_file.replace(/map_(oggi|domani)_(\d{8})_/, 'Mappa $1 - ').replace(".html", "").replace(/_/g, " ").toUpperCase();
-                            mapTitle.textContent = displayTitle;
+                            mapTitle.textContent = map_info.title; // Usa il titolo già formattato dal backend
                             mapItem.appendChild(mapTitle);
 
                             const iframe = document.createElement('iframe');
-                            iframe.src = `{{ url_for('serve_map', filename='') }}${map_file}`;
+                            iframe.src = `{{ url_for('serve_map', filename='') }}${map_info.filename}`;
                             iframe.setAttribute('allowfullscreen', '');
                             mapItem.appendChild(iframe);
                             mapContainer.appendChild(mapItem);
@@ -141,8 +144,8 @@
                 }
             })
             .catch(error => {
-                spinner.style.display = 'none'; // Nascondi spinner
-                this.disabled = false; // Riabilita il pulsante
+                spinner.style.display = 'none';
+                this.disabled = false;
                 messageDiv.textContent = `Si è verificato un errore di rete: ${error}`;
                 messageDiv.className = 'message error';
                 console.error('Errore:', error);
